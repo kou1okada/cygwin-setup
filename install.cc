@@ -919,6 +919,8 @@ do_install (HINSTANCE h, HWND owner)
   CreateThread (NULL, 0, do_install_reflector, context, 0, &threadID);
 }
 
+#define SHA512_DIGEST_STRING_LENGTH (SHA512_DIGEST_LENGTH * 8)
+
 static char *
 sha512_str (const unsigned char *in, char *buf)
 {
@@ -939,12 +941,12 @@ sha512_one (const packagesource& pkgsource)
     throw new Exception (TOSTRING (__LINE__) " " __FILE__,
 			 std::string ("IO Error opening ") + fullname,
 			 APPERR_IO_ERROR);
-  SHA2_CTX ctx;
+  SHA512_CTX ctx;
   unsigned char sha512result[SHA512_DIGEST_LENGTH];
   char ini_sum[SHA512_DIGEST_STRING_LENGTH],
        disk_sum[SHA512_DIGEST_STRING_LENGTH];
 
-  SHA512Init (&ctx);
+  SHA512_Init (&ctx);
 
   Log (LOG_BABBLE) << "Checking SHA512 for " << fullname << endLog;
 
@@ -953,11 +955,11 @@ sha512_one (const packagesource& pkgsource)
   Progress.SetText4 ("Progress:");
   Progress.SetBar1 (0);
 
-  unsigned char buffer[16384];
+  unsigned char buffer[64 * 1024];
   ssize_t count;
   while ((count = thefile->read (buffer, sizeof (buffer))) > 0)
   {
-    SHA512Update (&ctx, buffer, count);
+    SHA512_Update (&ctx, buffer, count);
     Progress.SetBar1 (thefile->tell (), thefile->get_size ());
   }
   delete thefile;
@@ -966,7 +968,7 @@ sha512_one (const packagesource& pkgsource)
 			 "IO Error reading " + fullname,
 			 APPERR_IO_ERROR);
 
-  SHA512Final (sha512result, &ctx);
+  SHA512_Final (sha512result, &ctx);
 
   if (memcmp (pkgsource.sha512sum, sha512result, sizeof sha512result))
     {

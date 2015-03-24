@@ -21,7 +21,7 @@
  */
 
 /* required to parse this file */
-#include "sha2.h"
+#include <openssl/sha.h>
 #include "strings.h"
 #include "String++.h"
 #include "csu_util/MD5Sum.h"
